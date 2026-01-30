@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Free Games published!!!</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>Free games published!!! 😀</h1>
+    </header>
+    <nav>Try games and publish games!</nav>
+
+    <h2>Upload games for other people to try!</h2>
+    <input type="file" id="fileInput" accept="*/*">
+    <button id="publishButton">Publish</button>
+
+    <h2>Published games by other people</h2>
+    <div id="output"></div>
+
+    <script>
+        document.getElementById('publishButton').addEventListener('click', function() {
+            var fileInput = document.getElementById('fileInput');
+
+            // Check if a file is selected
+            if (fileInput.files.length > 0) {
+                var file = fileInput.files[0];
+                
+                // Create a link element for download
+                var link = document.createElement('a');
+                link.href = URL.createObjectURL(file); // Create a local URL for the uploaded file
+                link.download = file.name; // Set the link's download attribute to the file name
+                link.textContent = "Download " + file.name; // Text for the link
+                
+                // Append the link to the output
+                document.getElementById('output').appendChild(link);
+                document.getElementById('output').appendChild(document.createElement('br')); // Line break for neatness
+                
+                // Clear the file input after publishing
+                fileInput.value = '';
+            } else {
+                alert("Please select a file.");
+            }
+        });
+    </script>
+
+</body>
+</html>

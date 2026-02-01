@@ -21,7 +21,23 @@
     <div id="output"></div>
 
     <script>
-        document.getElementById('publishButton').addEventListener('click', function() {
+        // Function to load published games from localStorage
+        function loadPublishedGames() {
+            const output = document.getElementById('output');
+            output.innerHTML = ''; // Clear existing content
+            
+            const publishedGames = JSON.parse(localStorage.getItem('publishedGames')) || [];
+            publishedGames.forEach(game => {
+                const link = document.createElement('a');
+                link.href = game.url;
+                link.download = game.name;
+                link.textContent = "Download " + game.name;
+                output.appendChild(link);
+                output.appendChild(document.createElement('br')); // Line break for neatness
+            });
+        }
+
+        document.getElementById('publishButton').addEventListener('click', async function() {
             var fileInput = document.getElementById('fileInput');
 
             // Check if a file is selected
@@ -30,71 +46,27 @@
                 
                 // Create a link element for download
                 var link = document.createElement('a');
-                link.href = URL.createObjectURL(file); // Create a local URL for the uploaded file
-                link.download = file.name; // Set the link's download attribute to the file name
-                link.textContent = "Download " + file.name; // Text for the link
+                link.href = URL.createObjectURL(file);
+                link.download = file.name;
                 
-                // Append the link to the output
-                document.getElementById('output').appendChild(link);
-                document.getElementById('output').appendChild(document.createElement('br')); // Line break for neatness
+                // Save the file information to localStorage
+                const publishedGames = JSON.parse(localStorage.getItem('publishedGames')) || [];
+                publishedGames.push({ name: file.name, url: link.href });
+                localStorage.setItem('publishedGames', JSON.stringify(publishedGames));
                 
                 // Clear the file input after publishing
                 fileInput.value = '';
+
+                // Update the output area
+                loadPublishedGames();
             } else {
                 alert("Please select a file.");
             }
         });
+
+        // Load published games when the page loads
+        window.onload = loadPublishedGames;
     </script>
-
-
-    <script>
-    // Function to load published games from localStorage
-    function loadPublishedGames() {
-        const output = document.getElementById('output');
-        output.innerHTML = ''; // Clear existing content
-        
-        // Retrieving existing links from localStorage
-        const publishedGames = JSON.parse(localStorage.getItem('publishedGames')) || [];
-        publishedGames.forEach(game => {
-            const link = document.createElement('a');
-            link.href = game.url; // Use stored URL
-            link.download = game.name; // Use stored name
-            link.textContent = "Download " + game.name; // Text for the link
-            output.appendChild(link);
-            output.appendChild(document.createElement('br')); // Line break for neatness
-        });
-    }
-
-    document.getElementById('publishButton').addEventListener('click', function() {
-        var fileInput = document.getElementById('fileInput');
-
-        // Check if a file is selected
-        if (fileInput.files.length > 0) {
-            var file = fileInput.files[0];
-            
-            // Create a link element for download
-            var link = document.createElement('a');
-            link.href = URL.createObjectURL(file); // Create a local URL for the uploaded file
-            link.download = file.name; // Set the link's download attribute to the file name
-            
-            // Save the file information to localStorage
-            const publishedGames = JSON.parse(localStorage.getItem('publishedGames')) || [];
-            publishedGames.push({ name: file.name, url: link.href });
-            localStorage.setItem('publishedGames', JSON.stringify(publishedGames));
-            
-            // Update the output area
-            loadPublishedGames();
-            
-            // Clear the file input after publishing
-            fileInput.value = '';
-        } else {
-            alert("Please select a file.");
-        }
-    });
-
-    // Load published games when the page loads
-    window.onload = loadPublishedGames;
-</script>
 
 </body>
 </html>

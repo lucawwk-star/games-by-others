@@ -17,7 +17,7 @@
     <input type="file" id="fileInput" accept="*/*">
     <button id="publishButton">Publish</button>
 
-    <h2>Download games from other people here:<h2/>
+    <h2>Published games by other people</h2>
     <div id="output"></div>
 
     <script>
@@ -27,14 +27,31 @@
             output.innerHTML = ''; // Clear existing content
             
             const publishedGames = JSON.parse(localStorage.getItem('publishedGames')) || [];
-            publishedGames.forEach(game => {
+            publishedGames.forEach((game, index) => {
+                const gameDiv = document.createElement('div');
+                
                 const link = document.createElement('a');
                 link.href = game.url;
                 link.download = game.name;
                 link.textContent = "Download " + game.name;
-                output.appendChild(link);
-                output.appendChild(document.createElement('br')); // Line break for neatness
+                
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Remove';
+                deleteButton.onclick = function() {
+                    removeGame(index);
+                };
+
+                gameDiv.appendChild(link);
+                gameDiv.appendChild(deleteButton);
+                output.appendChild(gameDiv);
             });
+        }
+
+        function removeGame(index) {
+            const publishedGames = JSON.parse(localStorage.getItem('publishedGames')) || [];
+            publishedGames.splice(index, 1); // Remove the game at the given index
+            localStorage.setItem('publishedGames', JSON.stringify(publishedGames)); // Update localStorage
+            loadPublishedGames(); // Refresh the displayed list
         }
 
         document.getElementById('publishButton').addEventListener('click', async function() {
@@ -70,4 +87,3 @@
 
 </body>
 </html>
-

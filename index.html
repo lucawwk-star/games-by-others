@@ -8,82 +8,169 @@
 </head>
 <body>
 
-    <header>
-        <h1>Free games published!!! 😀</h1>
-    </header>
-    <nav>Try games and publish games!</nav>
+<header>
+    <h1>Free games published!!! 😀</h1>
+</header>
+<nav id="navBar"></nav>
 
+<h2 id="uploadSection">Sign up or sign in to upload games!</h2>
+
+<div id="authForm">
+    <input type="text" id="username" placeholder="Enter username" required>
+    <input type="password" id="password" placeholder="Enter password" required>
+    <button id="signUpButton">Sign Up</button>
+    <button id="signInButton">Sign In</button>
+</div>
+
+<div id="gameSection" style="display:none;">
     <h2>Upload games for other people to try!</h2>
     <input type="file" id="fileInput" accept="*/*">
     <button id="publishButton">Publish</button>
 
     <h2>Published games by other people</h2>
     <div id="output"></div>
+</div>
 
-    <script>
-        // Function to load published games from localStorage
-        function loadPublishedGames() {
-            const output = document.getElementById('output');
-            output.innerHTML = ''; // Clear existing content
-            
-            const publishedGames = JSON.parse(localStorage.getItem('publishedGames')) || [];
-            publishedGames.forEach((game, index) => {
-                const gameDiv = document.createElement('div');
-                
-                const link = document.createElement('a');
-                link.href = game.url;
-                link.download = game.name;
-                link.textContent = "Download " + game.name;
-                
-                const deleteButton = document.createElement('button');
-                deleteButton.textContent = 'Remove';
-                deleteButton.onclick = function() {
-                    removeGame(index);
-                };
+<script>
+    let currentUser = null;
 
-                gameDiv.appendChild(link);
-                gameDiv.appendChild(deleteButton);
-                output.appendChild(gameDiv);
-            });
+    // Load existing users from localStorage
+    function loadUsers() {
+        return JSON.parse(localStorage.getItem('users')) || {};
+    }
+
+    // Save users to localStorage
+    function saveUsers(users) {
+        localStorage.setItem('users', JSON.stringify(users));
+    }
+
+    function loadPublishedGames() {
+        const output = document.getElementById('output');
+        output.innerHTML = ''; // Clear existing content
+
+        const publishedGames = JSON.parse(localStorage.getItem('publishedGames')) || [];
+        publishedGames.forEach((game, index) => {
+            const gameDiv = document.createElement('div');
+
+            const link = document.createElement('a');
+            link.href = game.url;
+            link.download = game.name;
+            link.textContent = "Download " + game.name;
+
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Remove';
+            deleteButton.onclick = function() {
+                removeGame(index);
+            };
+
+            gameDiv.appendChild(link);
+            gameDiv.appendChild(deleteButton);
+            output.appendChild(gameDiv);
+        });
+    }
+
+    function removeGame(index) {
+        if (!currentUser) {
+            alert("Please sign in to remove games.");
+            return;
         }
-
-        function removeGame(index) {
-            const publishedGames = JSON.parse(localStorage.getItem('publishedGames')) || [];
+        
+        const publishedGames = JSON.parse(localStorage.getItem('publishedGames')) || [];
+        
+        // Check if the current user is the uploader
+        if (publishedGames[index].uploader === currentUser) {
             publishedGames.splice(index, 1); // Remove the game at the given index
             localStorage.setItem('publishedGames', JSON.stringify(publishedGames)); // Update localStorage
             loadPublishedGames(); // Refresh the displayed list
+        } else {
+            alert("You can only remove your own uploaded games.");
+        }
+    }
+
+    function signUp() {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        console.log(`Sign Up - Username: ${username}, Password: ${password}`);
+
+        if (username && password) {
+            const users = loadUsers();
+            if (!users[username]) {
+                users[username] = password; // Store username and password
+                saveUsers(users); // Update localStorage
+                alert("Sign up successful!");
+                signIn(); // Automatically sign in after successful sign up
+            } else {
+                alert("Username already exists. Please choose another one.");
+            }
+        } else {
+            alert("Please enter a username and password.");
+        }
+    }
+
+    function signIn() {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        console.log(`Sign In - Username: ${username}, Password: ${password}`);
+
+        if (username && password) {
+            const users = loadUsers();
+            if (users[username] === password) {
+                currentUser = username;
+                document.getElementById('authForm').style.display = 'none';
+                document.getElementById('gameSection').style.display = 'block';
+                document.getElementById('uploadSection').innerText = `Welcome back ${currentUser}! You can now upload games.`;
+                loadPublishedGames();
+                clearAuthInputs(); // Clear input fields
+            } else {
+                alert("Incorrect username or password.");
+            }
+        } else {
+            alert("Please enter a username and password.");
+        }
+    }
+
+    function clearAuthInputs() {
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+    }
+
+    document.getElementById('signUpButton').addEventListener('click', signUp);
+    document.getElementById('signInButton').addEventListener('click', signIn);
+
+    document.getElementById('publishButton').addEventListener('click', function() {
+        if (!currentUser) {
+            alert("Please sign in to publish games.");
+            return;
         }
 
-        document.getElementById('publishButton').addEventListener('click', async function() {
-            var fileInput = document.getElementById('fileInput');
+        const fileInput = document.getElementById('fileInput');
 
-            // Check if a file is selected
-            if (fileInput.files.length > 0) {
-                var file = fileInput.files[0];
-                
-                // Create a link element for download
-                var link = document.createElement('a');
-                link.href = URL.createObjectURL(file);
-                link.download = file.name;
-                
-                // Save the file information to localStorage
-                const publishedGames = JSON.parse(localStorage.getItem('publishedGames')) || [];
-                publishedGames.push({ name: file.name, url: link.href });
-                localStorage.setItem('publishedGames', JSON.stringify(publishedGames));
-                
-                // Clear the file input after publishing
-                fileInput.value = '';
+        // Check if a file is selected
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            const link = URL.createObjectURL(file); // Create a URL
 
-                // Update the output area
-                loadPublishedGames();
-            } else {
-                alert("Please select a file.");
-            }
-        });
+            // Save the file information to localStorage with the uploader's name
+            const publishedGames = JSON.parse(localStorage.getItem('publishedGames')) || [];
+            publishedGames.push({ name: file.name, url: link, uploader: currentUser });
+            localStorage.setItem('publishedGames', JSON.stringify(publishedGames));
 
-        // Load published games when the page loads
-        window.onload = loadPublishedGames;
-    </script>
+            // Clear the file input and revoke the object URL
+            URL.revokeObjectURL(link);
+            fileInput.value = '';
+
+            // Update the output area
+            loadPublishedGames();
+        } else {
+            alert("Please select a file.");
+        }
+    });
+
+    // Load published games when the page loads
+    window.onload = function() {
+        loadPublishedGames();
+    };
+</script>
 
 </body>
 </html>
